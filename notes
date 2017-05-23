@@ -1,0 +1,14 @@
+- Skipping bad updates using version number chaining technique
+- Preserving function privileges
+    - Very important to manually drop temp table. Otherwise when transaction ends, it may drop the entire extension as part of the drop cascade when temporary objects are automatically cleaned up (test this)
+- Updating data and adding constraint at the same time
+- Version checking
+    - plpgsql function (or just do the ::int cast like the pg_partman patch)
+    - #ifdef block in C code
+- Always explicitly name all objects. Indexes, constraints, foreign keys, etc. Having a known, predictable name makes doing updates on such things later much easier
+- Avoid enums (may not be as big an issue in 10. check on status)
+- Skipping an update by naming update file appropriately
+
+-- More specific things from personal experience to add near end of talk
+- Dealing with object name truncation
+

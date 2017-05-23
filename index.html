@@ -1,0 +1,410 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>So You Want To Make An Extension?</title>
+
+        <meta name="description" content="So You Want To Make An Extension?">
+        <meta name="author" content="Keith Fiske">
+
+		<link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+        <style>
+            .reveal {
+              font-size: 30px;
+             }
+
+            #li30 li { line-height:30px }
+        </style>
+
+	</head>
+	<body>
+
+		<div class="reveal">
+			<div class="slides">
+				<section>
+                    <h1>So You Want To <br/>Make An Extension?</h1>
+                    <p>
+                        Presented by <a href="http://keithf4.com" target="_blank">Keith Fiske</a> / <a href="http://twitter.com/keithf4" target="_blank">@keithf4</a>
+                    </p>
+                    <p>
+                    Database Administrator @ <a href="http://www.omniti.com" target="_blank">OmniTI</a><br/>
+                        (<a href="https://github.com/keithf4/pg_partman" target="_blank">pg_partman</a>, <a href="https://github.com/omniti-labs/pg_extractor" target="_blank">pg_extractor</a>, <a href="https://github.com/omniti-labs/mimeo" target="_blank">mimeo</a>)
+                    </p>
+                    <p>
+                    <br/>
+                    <br/>
+                    Follow along at <br/><a href="http://slides.keithf4.com/extension_dev">http://slides.keithf4.com/extension_dev</a>
+                    </p>
+                
+                </section>
+
+				<section>
+                    <h2>OmniTI, Inc</h2>
+                    <p>
+                        <ul>
+                            <li>Full-stack support for high-traffic websites & applications</li>
+                            <ul>
+                                <li>Millions+ of users</li>
+                                <li>Terabytes+ of data</li>
+                                <li>High concurrency</li>
+                            </ul>
+                            <li>We're hiring!</li>
+                            <ul>
+                                <li><a href="http://omniti.com/is/hiring">http://omniti.com/is/hiring</a></li>
+                                <li>SysAdmins (SRE), Developers</li>
+                        </ul>
+                    </p>
+                </section>
+
+                <section>
+                    <h2>Why Extensions?</h2>
+                    <ul>
+                        <li>The old way
+                        <pre><code data-trim>
+psql -d mydb &lt; myplpgsql_code.sql
+                            </code></pre>
+                        </li>
+                        <li>Nothing in the database distinguished your objects from any other (except schema)</li>
+                        <li>Nothing in the database to indicate what version of your code is installed</li>
+                        <li>No easy way to remove your code later (except drop schema)</li>
+                        <li>No dependency options (ex. ensure dblink is installed first)</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2>Here's why...</h2>
+                    <ul>
+                        <li>Simple install
+                            <pre><code data-trim>
+CREATE EXTENSION ... [ SCHEMA ... ]
+                            </code></pre>
+                        </li>
+
+                        <li>Versioned code so you know exactly what is installed</li>
+                        <li>Simple update/downgrade 
+                            <pre><code data-trim>
+ALTER EXTENSION ... UPDATE [ TO '...' ]
+                            </code></pre>
+                        </li>
+                        <li>Easily see which objects are part of an extension (\dx+ in psql)</li>
+                        <li>Help prevent removal of critical objects
+                            <pre><code data-trim>
+# drop table partman.part_config;
+ERROR:  cannot drop table partman.part_config because extension pg_partman requires it
+HINT:  You can drop extension pg_partman instead.
+                            </code></pre>
+                        </li>
+                       <li>Extension dependencies
+                            <pre><code data-trim>
+requires = 'dblink,pgcrypto'
+                            </code></pre>
+                        </li>
+                    </ul>
+                </section>
+
+				<section>
+                    <h2>Getting started...</h2>
+                    <ul>
+                        <li>The PostgreSQL Docs</li>
+                        <ul>
+                            <li><a href="https://www.postgresql.org/docs/current/static/extend-extensions.html" target="_blank">V.36.15. Packaging Related Objects into an Extension</a></li>
+                            <li><a href="https://www.postgresql.org/docs/9.6/static/extend-pgxs.html" target="_blank">V.36.16. Extension Building Infrastructure</a></li>
+                            <li>VI.I. SQL Commands</li>
+                            <ul>
+                                <li><a href="https://www.postgresql.org/docs/9.6/static/sql-createextension.html" target="_blank">CREATE EXTENSION</a></li>
+                                <li><a href="https://www.postgresql.org/docs/9.6/static/sql-alterextension.html" target="_blank">ALTER EXTENSION</a> (lists objects that can be part of an extension)</li>
+                                <li><a href=""https://www.postgresql.org/docs/current/static/sql-dropextension.html target="_blank">DROP EXTENSION</a></li>
+                            </ul>
+                        </ul>
+                    </ul>
+                </section> 
+
+                <section>
+                    <h2>Control File</h2>
+                    <div id="li30" style="font-size: 25px";>
+                    <ul>
+                        <li><b>[extension].control</b></li>
+                        <li><b><i>default_version</i></b> - version installed when not specified with CREATE/ALTER EXTENSION</li>
+                        <li><b><i>comment</i></b> - Installed as COMMENT when running \dx in psql</li>
+                        <li><b><i>module_pathname</i></b> - subtituted for MODULE_PATHNAME in script files. Avoids having to hardcode library the name of the shared library file.</li>
+                        <li><b><i>requires</i></b> - list of extensions this extension depends on. These must be installed first.</li>
+                        <li><b><i>relocatable</i></b> - boolean that sets whether extension can be moved to another schema after install.</li>
+                        <br/>
+                        <li><b><i>directory</i></b> - location of extension SQL script files. Unless absolute, relative to SHAREDIR.</li>
+                        <li><b><i>encoding</i></b> - character set encoding used by script files. Default is database's encoding.</li>
+                        <li><b><i>superuser</i></b> - Default requires superuser to install/update extensions. Setting to false only requires privileges for commands given in script. </li>
+                        <li><b><i>schema</i></b> - hardcodes schema extension is installed to. Not recommended unless required.</li>
+                        <ul>
+                            <li>Not setting this allows user to designate their own schema at installation and also allows extension relocatability</li>
+                        </ul>
+                    </ul>
+                    </div>
+                </section>
+                <section>
+                    <h2>Secondary Control File</h2>
+                    <ul>
+                        <li><b>[extension--version].control</b></li>
+                        <li>Allows specific installation instructions for a version given to CREATE EXTENSION</li>
+                        <li>Installed to same location as primary control</li>
+                        <li>Same options as primary except <b>directory</b> and <b>default_version</b> cannot be used.</li>
+                    </ul>
+
+                </section>
+                
+                <section>
+                    <h2>SQL Script Files (Install)</h2>
+                    <ul>
+                        <li><b>[extension--version].sql</b></li>
+                        <li>pg_partman--3.0.2.sql</li>
+                        <li>Contains all the sql/plpgsql/plperl/etc code that gets installed into the database</li>
+                        <li>No compiled code (C)</li>
+                                <li><b></i>@extschema@</i></b> - a macro that can be used to fill in the schema given with the CREATE EXTENSION command or the <b><i>schema</i></b> option in the .control file. Avoids having to hardcode your schema but still be able to refer to it explicitly to ensure your function is called when another similarly named one is in the search path.</li>
+                    </ul>
+
+                </section>
+
+                <section>
+                    <h2>SQL Script Files (Updates)</h2>
+                    <div id="li30" style="font-size: 25px";>
+                    <ul>
+                        <li><b>[extension--oldversion--newversion].sql</b></li>
+                        <li>pg_partman--3.0.1--3.0.2.sql</li>
+                        <li>Provide upgrade/downgrade path for code installed within the database</li>
+                        <li>Code within and versions are arbitrary (they can by any character other than "--")</li>
+                        <li>PostgreSQL doesn't know that 3.0.2 is greater than 3.0.1. All it knows is that's the update path you want.</li>
+                        <li>Single update runs within a single transaction. Changes requiring multiple transactions must be done as separate versions.</li>
+                        <li>Upgrading multiple versions in a single ALTER command is also done in a single transaction
+                            <pre><code data-trim>
+Existing version is 1.2.3
+ALTER EXTENSION UPDATE extension TO '2.0.0';
+                            </pre></code>
+                            All updates between 1.2.3 and 2.0.0 (if any) are run in a single transaction.</li>
+                        <li>If updates require separate transactions, must update to specific versions individually
+                            <pre><code data-trim>
+ALTER EXTENSION UPDATE extension TO '1.2.4';
+ALTER EXTENSION UPDATE extension TO '1.2.5';
+ALTER EXTENSION UPDATE extension TO '2.0.0';
+                            </pre></code>
+                        </li>
+                    </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Version Update Paths</h2>
+                    <ul>
+                        <li>When no TO clause is given to ALTER EXTENSION ... UPDATE, the version contained in the installed .control file is used as the target version</li>
+                        <li>Any update scripts found between the installed version and the target update version are always run in order (1.2.3 -> 1.2.4 -> 2.0.0)</li>
+                        <li>Can see the update path that will be followed between any given versions using: <b><i>pg_extension_update_paths()</i></b>. Returns source, target &amp; update path that will be taken between them.</li>
+                            <pre><code data-trim>
+select * from pg_extension_update_paths('pg_partman') where source = '2.3.4' and target = '3.0.0';
+ source | target |                                    path                                     
+--------+--------+-----------------------------------------------------------------------------
+ 2.3.4  | 3.0.0  | 2.3.4--2.4.0--2.4.1--2.5.0--2.5.1--2.6.0--2.6.1--2.6.2--2.6.3--2.6.4--3.0.0
+
+                            </pre></code>
+                        <li>Not giving conditions will show every conceivable version path (up and down), even those with no actual possible path</li>
+                            <pre><code data-trim>
+keith@keith=# select * from pg_extension_update_paths('pg_partman') where source = '2.3.4' and target = '1.0.0';
+ source | target |  path  
+--------+--------+--------
+ 2.3.4  | 1.0.0  | «NULL»
+                            </pre></code>
+                </section>
+
+                <section>
+                    <h2>Skip Versions</h2>
+                    <div id="li30" style="font-size: 25px";>
+                    <ul>
+                        <li>PostgreSQL will always use the shortest possible path when multiple ones are available.</li>
+                        <li><b><i>Beware of downgrade scripts that will cause a shorter path!</i></b></li>
+                        <li>You can use this feature to create an update script that skips a specific version.</li>
+                        <li>Useful if you make a bad release that does not install properly</li>
+                        <li>Create a new update script that skips over the version you don't want to have installed. Here I don't want 0.10.0 to be installed anymore
+                            <pre><code data-trim>
+mimeo--0.9.3--0.10.0.sql
+mimeo--0.9.3--0.10.1.sql
+                            </pre></code>
+                            <pre><code data-trim>
+select * from pg_extension_update_paths('mimeo') where source = '0.9.3' and target ~ '0.10.' order by 2;
+ source | target |                         path                          
+--------+--------+-------------------------------------------------------
+ 0.9.3  | 0.10.0 | 0.9.3--0.10.0
+ 0.9.3  | 0.10.1 | 0.9.3--0.10.1
+ 0.9.3  | 0.10.2 | 0.9.3--0.10.1--0.10.2
+ 0.9.3  | 0.10.3 | 0.9.3--0.10.1--0.10.2--0.10.3
+                            </pre></code></li>
+                            <li>Allows people that may have successfully installed the bad version to still update as well
+                            <pre><code data-trim>
+keith@keith=# select * from pg_extension_update_paths('mimeo') where source = '0.10.0' and target ~ '0.10.' order by 2;
+ source | target |                          path                          
+--------+--------+--------------------------------------------------------
+ 0.10.0 | 0.10.1 | 0.10.0--0.10.1
+ 0.10.0 | 0.10.2 | 0.10.0--0.10.1--0.10.2
+                            </pre></code></li>
+                    </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h2>Create Extension From Existing Objects</h2>
+                        <ul>
+                            <li><b><i>[extenion--old_version--target_version.sql]</i></b></li>
+                            <li>Use FROM clause of the ALTER EXTENSION command</li>
+                            <li>"old_version" can be any arbitrary value, but is typically the string "unpackaged"
+                                <pre><code data-trim>
+ALTER EXTENSION dblink UPDATE FROM unpackaged;
+                                </pre></code>
+                            <li>Do not specify the TO option yet for a specific version. This method is usually done when the "target_version" will correspond to the code state that existed just before it was turned into an extension.</li>
+                            <li>Once the unpackaged version of your code is an extension, you can then run any extension additional updates to get it up to date.</li>
+                            <li>This was done for contrib modules when upgrading from PostgreSQL before 9.1.</li>
+                            <li>Highly recommended to convert any contrib modules installed before 9.1 to their extension form after upgrading. Otherwise you may not get updates to those extensions outside of the newly compiled binaries.</li>
+                        </ul>
+                </section>
+
+                <section>
+                    <h2>Config Tables</h2>
+    - Individual extension objects are not part of pg_dump. Only CREATE EXTENSION command is run upon restore
+        - Means that extension files/libraries have to be in place for restore to be successful
+    - Set attribute on table(s) and/or sequences(s) to force data to be dumped
+        - Look in docs 36.15.3 for using WHERE condition to avoid default data that's installed by the extension
+        - Note this data is ALWAYS dumped, even in a schema only dump
+
+
+                <section>
+                    <h2>File/Code Organization</h2>
+                    <ul>
+                        <li>Not required, just personal preference for easier maintenance</li>
+                        <li>Folders in extension directory: <b><i>bin, doc, sql, src, test, updates</i></b></li>
+                        <li><b><i>sql</i></b> contains: <b><i>functions, tables, types, [etc]</i></b></li>
+                        <li>Allows easier maintenance of plpgsql code since all functions aren't maintained in a single file</li>
+                        <li>More later on how to put it all back together into the required file format...</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Build Installation</h2>
+
+                    <ul>
+                        <li> Full details at <a href="https://www.postgresql.org/docs/9.6/static/extend-pgxs.html" target="_blank">V.36.16. Extension Building Infrastructure</a></li>
+                        <li><b><i>PG_CONFIG</i></b> - path to pg_config of PostgreSQL install to build against. Just set to "pg_config" to use the one in current PATH</li>
+                        <li><b><i>MODULES(_big)</i></b> - shared library objects to build</li>
+                        <li><b><i>EXTENSION</i></b> - extension name that matches control file name</li>
+                        <li><b><i>SCRIPTS(_built)</i></b> - script files that install to <i>prefix</i>/bin</li>
+                        <li><b><i>MODULEDIR</i></b> - subdir of <i>prefix</i>/share" where DATA and DOCS goes. Defaults to "extension" when EXTENSION is set</li>
+                        <li><b><i>DOCS</i></b> - documentation files installed to <i>prefix</i>/doc/$MODULEDIR</li>
+
+                        <li>Use PGXS build infrastructure to easily build against an existing PostgreSQL install.
+                            <pre><code data-trim>
+PGXS := $(shell $(PG_CONFIG) --pgxs)
+include $(PGXS)
+                            </code></pre>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Build Installation</h2>
+                    <ul>
+                        <li><b><i>DATA</i></b> - files to install to <i>prefix</i>/share/$MODULEDIR (usually sql files).</li>
+                        <li>Use Make build macros to piece the sql files back together into the required, single script file.</li>
+                        <li>Include the <b><i>updates</i></b> folder in the DATA definition so it gets copied with the main script file.</li>
+                            <pre><code data-trim>
+EXTVERSION = $(shell grep default_version $(EXTENSION).control | \
+               sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
+
+all: sql/$(EXTENSION)--$(EXTVERSION).sql
+
+sql/$(EXTENSION)--$(EXTVERSION).sql: $(sort $(wildcard sql/types/*.sql)) $(sort $(wildcard sql/tables/*.sql)) $(sort $(wildcard sql/functions/*.sql))
+	cat $^ > $@
+
+DATA = $(wildcard updates/*--*.sql) sql/$(EXTENSION)--$(EXTVERSION).sql
+EXTRA_CLEAN = sql/$(EXTENSION)--$(EXTVERSION).sql
+                            </code></pre>
+                        <li><b><i>EXTRA_CLEAN</i></b> - Usually just the main sql script since it's dynamically generated</li>
+                    </ul>
+
+
+                </section>
+                <section>
+                    <h2>Build Instructions</h2>
+                    <ul>
+                        <li>Version checking at build time</li>
+                            <pre><code data-trim>
+PG94 = $(shell $(PG_CONFIG) --version | egrep " 8\.| 9\.0| 9\.1| 9\.2| 9\.3" > /dev/null && echo no || echo yes)
+
+ifeq ($(PG94),yes)
+    [... Do all your build stuff here ...]
+else
+$(error Minimum version of PostgreSQL required is 9.4.0)
+endif
+                            </code></pre>
+                            <li>Full example Makefile: <a href="https://github.com/keithf4/pg_partman/blob/master/Makefile" target="_blank">https://github.com/keithf4/pg_partman/blob/master/Makefile</a></li>
+                    </ul>
+                </section>
+
+
+
+                <section>
+                    <h1>Personal Experience Tips</h1>
+                </section>
+
+                <section>
+
+- Find the trick to disallowing SQL script file to not be run except by CREATE EXTENSION
+
+- Always explicitly name all objects. Indexes, constraints, foreign keys, etc. Having a known, predictable name makes doing updates on such things later much easier
+        - Ex. Automatically named constraints/indexes on the same column get unpredictable names as time goes on.
+
+- Preserving function privileges
+    - Very important to manually drop temp table. Otherwise when transaction ends, it may drop the entire extension as part of the drop cascade when temporary objects are automatically cleaned up (test this)
+
+- Version checking
+    - plpgsql function (or just do the ::int cast like the pg_partman patch)
+    - #ifdef block in C code
+
+- Dealing with object name truncation
+- Avoid enums (may not be as big an issue in 10. check on status)
+- Updating data and adding constraint at the same time
+
+- pgtap
+    - Use numbered files to help control ordering when each test file is not in its own transaction (see mimeo) 
+        - Link to mimeo for example
+                </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				],
+                slideNumber: true,
+                history: true,
+			});
+		</script>
+	</body>
+</html>
