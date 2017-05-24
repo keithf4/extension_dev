@@ -97,7 +97,7 @@ CREATE EXTENSION ... [ SCHEMA ... ]
                         </li>
 
                         <li>Versioned code so you know exactly what is installed</li>
-                        <li>Simple update/downgrade 
+                        <li>Simple update (upgrade or downgrade)
                             <pre><code data-trim>
 ALTER EXTENSION ... UPDATE [ TO '...' ]
                             </code></pre>
@@ -149,7 +149,7 @@ requires = 'dblink,pgcrypto'
                         <li><b><i>directory</i></b> - location of extension SQL script files. Unless absolute, relative to SHAREDIR.</li>
                         <li><b><i>encoding</i></b> - character set encoding used by script files. Default is database's encoding.</li>
                         <li><b><i>superuser</i></b> - Default requires superuser to install/update extensions. Setting to false only requires privileges for commands given in script. </li>
-                        <li><b><i>schema</i></b> - hardcodes schema extension is installed to. Not recommended unless required.</li>
+                        <li><b><i>schema</i></b> - hardcodes schema extension is installed to. Not recommended.</li>
                         <ul>
                             <li>Not setting this allows user to designate their own schema at installation and also allows extension relocatability</li>
                         </ul>
@@ -264,44 +264,67 @@ keith@keith=# select * from pg_extension_update_paths('mimeo') where source = '0
 
                 <section>
                     <h2>Create Extension From Existing Objects</h2>
-                        <ul>
-                            <li><b><i>[extenion--old_version--target_version.sql]</i></b></li>
-                            <li>Use FROM clause of the ALTER EXTENSION command</li>
-                            <li>"old_version" can be any arbitrary value, but is typically the string "unpackaged"
-                                <pre><code data-trim>
+                    <div id="li30" style="font-size: 25px";>
+                    <ul>
+                        <li><b><i>[extension--old_version--target_version].sql</i></b></li>
+                        <li>Use FROM clause of the ALTER EXTENSION command</li>
+                        <li>"old_version" can be any arbitrary value, but is typically the string "unpackaged"
+                            <pre><code data-trim>
 ALTER EXTENSION dblink UPDATE FROM unpackaged;
-                                </pre></code>
-                            <li>Do not specify the TO option yet for a specific version. This method is usually done when the "target_version" will correspond to the code state that existed just before it was turned into an extension.</li>
-                            <li>Once the unpackaged version of your code is an extension, you can then run any extension additional updates to get it up to date.</li>
-                            <li>This was done for contrib modules when upgrading from PostgreSQL before 9.1.</li>
-                            <li>Highly recommended to convert any contrib modules installed before 9.1 to their extension form after upgrading. Otherwise you may not get updates to those extensions outside of the newly compiled binaries.</li>
-                        </ul>
+                            </pre></code>
+                        <li>Do not specify the TO option yet for a specific version. This method is usually done when the "target_version" will correspond to the code state that existed just before it was turned into an extension.</li>
+                        <li>Once the unpackaged version of your code is an extension, you can then run any extension additional updates to get it up to date.</li>
+                        <li>This was done for contrib modules when upgrading from PostgreSQL before 9.1.</li>
+                        <li>Highly recommended to convert any contrib modules installed before 9.1 to their extension form after upgrading. Otherwise you may not get updates to those extensions outside of the newly compiled binaries.</li>
+                    </ul>
+                    </div>
                 </section>
 
                 <section>
                     <h2>Config Tables</h2>
-    - Individual extension objects are not part of pg_dump. Only CREATE EXTENSION command is run upon restore
-        - Means that extension files/libraries have to be in place for restore to be successful
-    - Set attribute on table(s) and/or sequences(s) to force data to be dumped
-        - Look in docs 36.15.3 for using WHERE condition to avoid default data that's installed by the extension
-        - Note this data is ALWAYS dumped, even in a schema only dump
+                        <div id="li30" style="font-size: 25px";>
+                        <ul>
+                            <li>Extension tables, sequences and their data not normally output by pg_dump. Restore only runs the CREATE EXTENSION command.</li>
+                            <ul>
+                                <li>This means extension script files &amp; libraries must be in place before doing a pg_restore</li>
+                            </ul>
+                            <li>Set extension flag to dump config table data &amp; sequence values (not the schema itself)
+                                <pre><code data-trim>
+SELECT pg_catalog.pg_extension_config_dump('part_config', '');
+SELECT pg_catalog.pg_extension_config_dump('my_config_seq', '');
+                                </pre></code>
+                            </li>
+                            <li>When second argument is an empty string, the entire table is dumped. Only do this when table is initially empty on extension creation. Second argument unused for sequences.</li>
+                            <li>When extension config table has initial data, set second argument to WHERE condition to exclude this data when output by pg_dump. 
+                                <pre><code data-trim>
+SELECT pg_catalog.pg_extension_config_dump('job_status_text', 'WHERE alert_code NOT IN (1,2,3)');
+                                </pre></code>
+                            </li>
+                            <li>Note this data is ALWAYS dumped, even when a schema only dump (-s) is done. Makes it difficult to keep data for extension tables with a lot of data since this setting will likely not be set (this may have been fixed, if not here's a feature request!).</li>
+                        </div>
+                        </ul>
 
+                </section>
 
                 <section>
                     <h2>File/Code Organization</h2>
                     <ul>
                         <li>Not required, just personal preference for easier maintenance</li>
                         <li>Folders in extension directory: <b><i>bin, doc, sql, src, test, updates</i></b></li>
-                        <li><b><i>sql</i></b> contains: <b><i>functions, tables, types, [etc]</i></b></li>
+                        <li><b><i>sql/</i></b> contains: <b><i>functions, tables, types, [etc]</i></b></li>
                         <li>Allows easier maintenance of plpgsql code since all functions aren't maintained in a single file</li>
                         <li>More later on how to put it all back together into the required file format...</li>
+                        <li><b><i>Important Note</i></b>: Ensure code in <b><i>sql/</i></b> files matches the code in the update scripts.</li>
+                        <ul>
+                            <li><a href="http://meldmerge.org/" target="_blank">Meld</a> - Tool for doing side-by-side file diff comparison can help make this easier</li>
+                        </ul>
                     </ul>
                 </section>
                 <section>
                     <h2>Build Installation</h2>
 
                     <ul>
-                        <li> Full details at <a href="https://www.postgresql.org/docs/9.6/static/extend-pgxs.html" target="_blank">V.36.16. Extension Building Infrastructure</a></li>
+                        <li>Full details at <a href="https://www.postgresql.org/docs/9.6/static/extend-pgxs.html" target="_blank">V.36.16. Extension Building Infrastructure</a></li>
                         <li><b><i>PG_CONFIG</i></b> - path to pg_config of PostgreSQL install to build against. Just set to "pg_config" to use the one in current PATH</li>
                         <li><b><i>MODULES(_big)</i></b> - shared library objects to build</li>
                         <li><b><i>EXTENSION</i></b> - extension name that matches control file name</li>
@@ -323,7 +346,7 @@ include $(PGXS)
                         <li><b><i>DATA</i></b> - files to install to <i>prefix</i>/share/$MODULEDIR (usually sql files).</li>
                         <li>Use Make build macros to piece the sql files back together into the required, single script file.</li>
                         <li>Include the <b><i>updates</i></b> folder in the DATA definition so it gets copied with the main script file.</li>
-                            <pre><code data-trim>
+                            <div style="width:1100px;overflow:auto"><pre><code data-trim>
 EXTVERSION = $(shell grep default_version $(EXTENSION).control | \
                sed -e "s/default_version[[:space:]]*=[[:space:]]*'\([^']*\)'/\1/")
 
@@ -334,11 +357,9 @@ sql/$(EXTENSION)--$(EXTVERSION).sql: $(sort $(wildcard sql/types/*.sql)) $(sort 
 
 DATA = $(wildcard updates/*--*.sql) sql/$(EXTENSION)--$(EXTVERSION).sql
 EXTRA_CLEAN = sql/$(EXTENSION)--$(EXTVERSION).sql
-                            </code></pre>
+                            </code></pre></div>
                         <li><b><i>EXTRA_CLEAN</i></b> - Usually just the main sql script since it's dynamically generated</li>
                     </ul>
-
-
                 </section>
                 <section>
                     <h2>Build Instructions</h2>
@@ -357,21 +378,82 @@ endif
                     </ul>
                 </section>
 
-
-
                 <section>
                     <h1>Personal Experience Tips</h1>
                 </section>
 
                 <section>
+                    <h2>Predictable Naming</h2>
+                    <ul>
+                        <li>Always explicitly name all objects the extension creates.</li>
+                        <li>Indexes, constraints, foreign keys, etc. </li>
+                        <li>Having a known, predictable name makes doing updates on such things later much easier</li>
+                        <li>Ex. Automatically named constraints/indexes on the same column get unpredictable names as time goes on.</li>
+                            <pre><code data-trim>
+CREATE INDEX part_config_type_idx ON @extschema@.part_config (partition_type);
 
-- Find the trick to disallowing SQL script file to not be run except by CREATE EXTENSION
+CREATE TABLE part_config_sub (
+    sub_parent text 
+    , sub_partition_type text NOT NULL
+    [...]
+    , CONSTRAINT part_config_sub_pkey PRIMARY KEY (sub_parent)
+    , CONSTRAINT part_config_sub_sub_parent_fkey FOREIGN KEY (sub_parent) REFERENCES @extschema@.part_config (parent_table) ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
+    , CONSTRAINT positive_premake_check CHECK (sub_premake > 0)
+);
+                            </code></pre>
+                    </ul>
+                </section>
 
-- Always explicitly name all objects. Indexes, constraints, foreign keys, etc. Having a known, predictable name makes doing updates on such things later much easier
-        - Ex. Automatically named constraints/indexes on the same column get unpredictable names as time goes on.
+                <section>
+                    <h2>Preserving Privileges</h2>
+                    <ul>
+                        <li>You will, at some point, have to drop and recreate a function because you change its definition and cannot use CREATE OR REPLACE ...</li>
+                        <li>User may have granted additional privileges on extension objects that you cannot predict</li>
+                        <li>If you have to drop and recreate objects, that will remove the user's custom grants</li>
+                            <pre><code data-trim>
+CREATE TEMP TABLE partman_preserve_privs_temp (statement text);
 
-- Preserving function privileges
-    - Very important to manually drop temp table. Otherwise when transaction ends, it may drop the entire extension as part of the drop cascade when temporary objects are automatically cleaned up (test this)
+INSERT INTO partman_preserve_privs_temp 
+SELECT 'GRANT EXECUTE ON FUNCTION @extschema@.create_function_id(text, bigint) TO '||array_to_string(array_agg(grantee::text), ',')||';' 
+FROM information_schema.routine_privileges
+WHERE routine_schema = '@extschema@'
+AND routine_name = 'create_function_id'; 
+
+DROP FUNCTION @extschema@.create_function_id(text, bigint, boolean); 
+
+[... Do all your update code here ...]
+                            </code></pre>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Preserving Privileges</h2>
+                        <pre><code data-trim>
+[... Do all your extension update code here ...]
+
+-- Restore dropped object privileges
+DO $$
+DECLARE
+v_row   record;
+BEGIN
+    FOR v_row IN SELECT statement FROM partman_preserve_privs_temp LOOP
+        IF v_row.statement IS NOT NULL THEN
+            EXECUTE v_row.statement;
+        END IF;
+    END LOOP;
+END
+$$;
+
+DROP TABLE IF EXISTS partman_preserve_privs_temp;
+                        </code></pre>
+                </section>
+
+                <section>
+                    <h2>Manually Drop Temp Tables</h2>
+                    <ul>
+                        <li>Reported to me that it's very important to manually drop any temp table created in any update script</li>
+                        <li>Possibility that when transaction ends, it may the entire extension as part of the drop cascade when temporary objects are automatically cleaned up.</li>
+                        <li>Tested this and unable to replicate, but I've always done this anyway due to my own general paranoia.</li>
+                </section>
 
 - Version checking
     - plpgsql function (or just do the ::int cast like the pg_partman patch)
@@ -380,6 +462,18 @@ endif
 - Dealing with object name truncation
 - Avoid enums (may not be as big an issue in 10. check on status)
 - Updating data and adding constraint at the same time
+
+                <section>
+                    <h2>Prevent Non-Extension Installation</h2>
+                    <ul>
+                        <li>Add the following line to the top of the sql install script
+                            <pre><code data-trim>
+\echo Use "CREATE EXTENSION dblink" to load this file. \quit
+                            </code></pre>
+                        </li>
+                        <li>If you split sql objects out to individual files, will have to be in whatever the first object added to file is (predictability is one reason it's good to sort in the make file).</li>
+                    </ul>
+                </section>
 
 - pgtap
     - Use numbered files to help control ordering when each test file is not in its own transaction (see mimeo) 
