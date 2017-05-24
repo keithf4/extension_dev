@@ -10,7 +10,8 @@
         <meta name="author" content="Keith Fiske">
 
 		<link rel="stylesheet" href="css/reveal.css">
-        <link rel="stylesheet" href="css/theme/black.css">
+        <!--        <link rel="stylesheet" href="css/theme/black.css"> -->
+        <link rel="stylesheet" href="css/theme/omniti.css">
 
 		<!-- Theme used for syntax highlighting of code -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
@@ -37,7 +38,7 @@
 
 		<div class="reveal">
 			<div class="slides">
-				<section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h1>So You Want To <br/>Make An Extension?</h1>
                     <p>
                         Presented by <a href="http://keithf4.com" target="_blank">Keith Fiske</a> / <a href="http://twitter.com/keithf4" target="_blank">@keithf4</a>
@@ -54,7 +55,7 @@
                 
                 </section>
 
-				<section>
+				<section data-background="css/theme/omniti_bg_logo.png">
                     <h2>OmniTI, Inc</h2>
                     <p>
                         <ul>
@@ -72,7 +73,7 @@
                     </p>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Why Extensions?</h2>
                     <ul>
                         <li>The old way
@@ -87,7 +88,7 @@ psql -d mydb &lt; myplpgsql_code.sql
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Here's why...</h2>
                     <ul>
                         <li>Simple install
@@ -118,7 +119,7 @@ requires = 'dblink,pgcrypto'
                     </ul>
                 </section>
 
-				<section>
+				<section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Getting started...</h2>
                     <ul>
                         <li>The PostgreSQL Docs</li>
@@ -135,7 +136,7 @@ requires = 'dblink,pgcrypto'
                     </ul>
                 </section> 
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Control File</h2>
                     <div id="li30" style="font-size: 25px";>
                     <ul>
@@ -156,7 +157,7 @@ requires = 'dblink,pgcrypto'
                     </ul>
                     </div>
                 </section>
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Secondary Control File</h2>
                     <ul>
                         <li><b>[extension--version].control</b></li>
@@ -167,7 +168,7 @@ requires = 'dblink,pgcrypto'
 
                 </section>
                 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>SQL Script Files (Install)</h2>
                     <ul>
                         <li><b>[extension--version].sql</b></li>
@@ -179,7 +180,7 @@ requires = 'dblink,pgcrypto'
 
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>SQL Script Files (Updates)</h2>
                     <div id="li30" style="font-size: 25px";>
                     <ul>
@@ -206,7 +207,7 @@ ALTER EXTENSION UPDATE extension TO '2.0.0';
                     </div>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Version Update Paths</h2>
                     <ul>
                         <li>When no TO clause is given to ALTER EXTENSION ... UPDATE, the version contained in the installed .control file is used as the target version</li>
@@ -228,7 +229,7 @@ keith@keith=# select * from pg_extension_update_paths('pg_partman') where source
                             </pre></code>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Skip Versions</h2>
                     <div id="li30" style="font-size: 25px";>
                     <ul>
@@ -262,7 +263,7 @@ keith@keith=# select * from pg_extension_update_paths('mimeo') where source = '0
                     </div>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Create Extension From Existing Objects</h2>
                     <div id="li30" style="font-size: 25px";>
                     <ul>
@@ -280,7 +281,7 @@ ALTER EXTENSION dblink UPDATE FROM unpackaged;
                     </div>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Config Tables</h2>
                         <div id="li30" style="font-size: 25px";>
                         <ul>
@@ -306,7 +307,7 @@ SELECT pg_catalog.pg_extension_config_dump('job_status_text', 'WHERE alert_code 
 
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>File/Code Organization</h2>
                     <ul>
                         <li>Not required, just personal preference for easier maintenance</li>
@@ -320,7 +321,7 @@ SELECT pg_catalog.pg_extension_config_dump('job_status_text', 'WHERE alert_code 
                         </ul>
                     </ul>
                 </section>
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Build Installation</h2>
 
                     <ul>
@@ -340,7 +341,7 @@ include $(PGXS)
                         </li>
                     </ul>
                 </section>
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Build Installation (cont)</h2>
                     <ul>
                         <li><b><i>DATA</i></b> - files to install to <i>prefix</i>/share/$MODULEDIR (usually sql files).</li>
@@ -361,7 +362,7 @@ EXTRA_CLEAN = sql/$(EXTENSION)--$(EXTVERSION).sql
                         <li><b><i>EXTRA_CLEAN</i></b> - Usually just the main sql script since it's dynamically generated</li>
                     </ul>
                 </section>
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Build Instructions (cont)</h2>
                     <ul>
                         <li>Version checking at build time</li>
@@ -378,11 +379,11 @@ endif
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h1>Personal Experience Tips</h1>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Predictable Naming</h2>
                     <ul>
                         <li>Whenever possible, explicitly name all objects the extension creates.</li>
@@ -404,7 +405,7 @@ CREATE TABLE part_config_sub (
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Preserving Privileges</h2>
                     <ul>
                         <li>You will, at some point, have to drop and recreate a function because you change its definition and cannot use CREATE OR REPLACE ...</li>
@@ -425,7 +426,7 @@ DROP FUNCTION @extschema@.create_function_id(text, bigint, boolean);
                             </div></code></pre>
                     </ul>
                 </section>
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Preserving Privileges (cont)</h2>
                         <pre><code data-trim>
 [... Do all your extension update code here ...]
@@ -447,7 +448,7 @@ DROP TABLE IF EXISTS partman_preserve_privs_temp;
                         </code></pre>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Manually Drop Temp Tables</h2>
                     <ul>
                         <li>Reported to me that it's very important to manually drop any temp table created in any update script</li>
@@ -455,7 +456,7 @@ DROP TABLE IF EXISTS partman_preserve_privs_temp;
                         <li>Tested this and unable to replicate, but I've always done this anyway due to my own general paranoia.</li>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Version Checking</h2>
                     <ul>
                         <li>PL/pgSQL</li>
@@ -485,7 +486,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Object Name Truncation</h2>
                     <ul>
                         <li>Object names have a 63 character limit (by default, set at compile time)</li>
@@ -495,7 +496,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Avoid Enums</h2>
                     <ul>
                         <li>Not easily editable, especially in extension transaction context</li>
@@ -508,7 +509,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>Prevent Non-Extension Installation</h2>
                     <ul>
                         <li>Add the following line to the top of the sql install script to prevent running it in psql
@@ -520,7 +521,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                     </ul>
                 </section>
 
-                <section>
+                <section data-background="css/theme/omniti_bg_logo.png">
                     <h2>pgTAP</h2>
                     <ul>
                         <li><a href="http://pgtap.org" target="_blank">http://pgtap.org</a></li>
@@ -534,7 +535,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                     </ul>
                  </section>
 
-                 <section>
+                 <section data-background="css/theme/omniti_bg_logo.png">
                      <h2>PGXN</h2>
                      <ul>
                          <li>PostgreSQL Extension Network - <a href="https://pgxn.org" target="_blank">https://pgxn.org</a></li>
@@ -544,7 +545,8 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                      </ul>
                  </section>
 
-                 <section>
+                 <section data-background="css/theme/omniti_bg_logo.png">
+                     <h1>Go Make An Extension!</h1>
                     <ul>
                         <li>PostgreSQL Home Page - <a href="http://www.postgresql.org" target="_blank">postgresql.org</a></li>
                         <li>Planet PostgreSQL Community News Feed - <a href="http://planet.postgresql.org" target="_blank">planet.postgresql.org</a></li>
