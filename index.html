@@ -222,7 +222,7 @@ select * from pg_extension_update_paths('pg_partman') where source = '2.3.4' and
                             </pre></code>
                         <li>Not giving conditions will show every conceivable version path (up and down), even those with no actual possible path</li>
                             <pre><code data-trim>
-keith@keith=# select * from pg_extension_update_paths('pg_partman') where source = '2.3.4' and target = '1.0.0';
+select * from pg_extension_update_paths('pg_partman') where source = '2.3.4' and target = '1.0.0';
  source | target |  path  
 --------+--------+--------
  2.3.4  | 1.0.0  | «NULL»
@@ -251,9 +251,9 @@ select * from pg_extension_update_paths('mimeo') where source = '0.9.3' and targ
  0.9.3  | 0.10.2 | 0.9.3--0.10.1--0.10.2
  0.9.3  | 0.10.3 | 0.9.3--0.10.1--0.10.2--0.10.3
                             </pre></code></li>
-                            <li>Allows people that may have successfully installed the bad version to still update as well
+                            <li>Allows people that may have successfully installed the bad version to still update
                             <pre><code data-trim>
-keith@keith=# select * from pg_extension_update_paths('mimeo') where source = '0.10.0' and target ~ '0.10.' order by 2;
+select * from pg_extension_update_paths('mimeo') where source = '0.10.0' and target ~ '0.10.' order by 2;
  source | target |                          path                          
 --------+--------+--------------------------------------------------------
  0.10.0 | 0.10.1 | 0.10.0--0.10.1
@@ -548,6 +548,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                  <section data-background="css/theme/omniti_bg_logo.png">
                      <h1>Go Make An Extension!</h1>
                     <ul>
+                        <li>Thanks to Dimitri Fontaine! (<a href="https://twitter.com/tapoueh" target="_blank">@tapoueh</a>)
                         <li>PostgreSQL Home Page - <a href="http://www.postgresql.org" target="_blank">postgresql.org</a></li>
                         <li>Planet PostgreSQL Community News Feed - <a href="http://planet.postgresql.org" target="_blank">planet.postgresql.org</a></li>
                         <li>PostgreSQL Extension Network - <a href="http://pgxn.org" target="_blank">pgxn.org</a></li>
