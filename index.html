@@ -528,7 +528,7 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                         <li>Unit testing for schema, data changes &amp; and actual functionality of both</li>
                         <li>Two methods I've used:</li>
                             <ol>
-                                <li>Each file is its own, uncommitted transaction. BEGIN [...] ROLLBACK (<a href=""https://github.com/keithf4/pg_partman/tree/master/test target="_blank">pg_partman</a>) </li>
+                                <li>Each file is its own, uncommitted transaction. BEGIN [...] ROLLBACK (<a href="https://github.com/keithf4/pg_partman/tree/master/test" target="_blank">pg_partman</a>) </li>
                                 <li>Each file depends on the previous to run in a specific order. Number the test files. Last one(s) clean things up. (<a href="https://github.com/omniti-labs/mimeo/tree/master/test" target="_blank">mimeo</a>)</li>
                             </ol>
                             <li>Add a README_test file with important test info (necessary schema architecture, dependencies, ex. max_locks_per_transaction in pg_partman)</li>
