@@ -209,14 +209,14 @@ body {
  * LINKS
  *********************************************/
 .reveal a {
-  color: #c9662a;
+  color: #419bdc;
   text-decoration: none;
   -webkit-transition: color .15s ease;
   -moz-transition: color .15s ease;
   transition: color .15s ease; }
 
 .reveal a:hover {
-  color: #b32720;
+  color: #2868ae;
   text-shadow: none;
   border: none; }
 
@@ -252,31 +252,31 @@ body {
  *********************************************/
 .reveal .controls .navigate-left,
 .reveal .controls .navigate-left.enabled {
-  border-right-color: #c9662a; }
+  border-right-color: #419bdc; }
 
 .reveal .controls .navigate-right,
 .reveal .controls .navigate-right.enabled {
-  border-left-color: #c9662a; }
+  border-left-color: #419bdc; }
 
 .reveal .controls .navigate-up,
 .reveal .controls .navigate-up.enabled {
-  border-bottom-color: #c9662a; }
+  border-bottom-color: #419bdc; }
 
 .reveal .controls .navigate-down,
 .reveal .controls .navigate-down.enabled {
-  border-top-color: #c9662a; }
+  border-top-color: #419bdc; }
 
 .reveal .controls .navigate-left.enabled:hover {
-  border-right-color: #b32720; }
+  border-right-color: #2868ae; }
 
 .reveal .controls .navigate-right.enabled:hover {
-  border-left-color: #b32720; }
+  border-left-color: #2868ae; }
 
 .reveal .controls .navigate-up.enabled:hover {
-  border-bottom-color: #b32720; }
+  border-bottom-color: #2868ae; }
 
 .reveal .controls .navigate-down.enabled:hover {
-  border-top-color: #b32720; }
+  border-top-color: #2868ae; }
 
 /*********************************************
  * PROGRESS BAR
@@ -285,7 +285,7 @@ body {
   background: rgba(0, 0, 0, 0.2); }
 
 .reveal .progress span {
-  background: #b32720;
+  background: #d33f49;
   -webkit-transition: width 800ms cubic-bezier(0.26, 0.86, 0.44, 0.985);
   -moz-transition: width 800ms cubic-bezier(0.26, 0.86, 0.44, 0.985);
   transition: width 800ms cubic-bezier(0.26, 0.86, 0.44, 0.985); }
@@ -295,5 +295,5 @@ body {
  *********************************************/
 .reveal .slide-number {
   background: none;
-  color: #b32720;
+  color: #2868ae;
   font-weight: bold; }
