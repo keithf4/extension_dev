@@ -213,6 +213,7 @@ ALTER EXTENSION UPDATE extension TO '2.0.0';
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Version Update Paths</h2>
+                    <div id="li30" style="font-size: 25px";>
                     <ul>
                         <li>When no TO clause is given to ALTER EXTENSION ... UPDATE, the version contained in the installed .control file is used as the target version</li>
                         <li>Any update scripts found between the installed version and the target update version are always run in order of available paths based on update file names</li>
@@ -231,6 +232,7 @@ select * from pg_extension_update_paths('pg_partman') where source = '2.3.4' and
 --------+--------+--------
  2.3.4  | 1.0.0  | «NULL»
                             </pre></code>
+                    </ul>
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
@@ -358,7 +360,7 @@ EXTVERSION = $(shell grep default_version $(EXTENSION).control | \
 all: sql/$(EXTENSION)--$(EXTVERSION).sql
 
 sql/$(EXTENSION)--$(EXTVERSION).sql: $(sort $(wildcard sql/types/*.sql)) $(sort $(wildcard sql/tables/*.sql)) $(sort $(wildcard sql/functions/*.sql))
-	cat $^ > $@
+	cat $^ &gt; $@
 
 DATA = $(wildcard updates/*--*.sql) sql/$(EXTENSION)--$(EXTVERSION).sql
 EXTRA_CLEAN = sql/$(EXTENSION)--$(EXTVERSION).sql
@@ -371,11 +373,20 @@ EXTRA_CLEAN = sql/$(EXTENSION)--$(EXTVERSION).sql
                     <ul>
                         <li>Version checking at build time</li>
                             <pre><code data-trim>
-PG94 = $(shell $(PG_CONFIG) --version | egrep " 8\.| 9\.0| 9\.1| 9\.2| 9\.3" > /dev/null && echo no || echo yes)
+PG94 = $(shell $(PG_CONFIG) --version | egrep " 8\.| 9\.0| 9\.1| 9\.2| 9\.3" &gt; /dev/null &amp;&amp; echo no || echo yes)
+PG11 = $(shell $(PG_CONFIG) --version | egrep " 8\.| 9\.| 10\." &gt; /dev/null &amp;&amp; echo no || echo yes)
 
 ifeq ($(PG94),yes)
     [... Do all your build stuff here ...]
+
+ifeq ($(PG11),yes)
+    [... Do only pg11+ stuff here ...]
 else
+    [... Do pre-11 stuff here ... ]
+
+# end PG11 if
+endif
+
 $(error Minimum version of PostgreSQL required is 9.4.0)
 endif
                             </code></pre>
@@ -403,7 +414,7 @@ CREATE TABLE part_config_sub (
     [...]
     , CONSTRAINT part_config_sub_pkey PRIMARY KEY (sub_parent)
     , CONSTRAINT part_config_sub_sub_parent_fkey FOREIGN KEY (sub_parent) REFERENCES @extschema@.part_config (parent_table) ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED
-    , CONSTRAINT positive_premake_check CHECK (sub_premake > 0)
+    , CONSTRAINT positive_premake_check CHECK (sub_premake &gt; 0)
 );
                             </div></code></pre>
                     </ul>
@@ -453,14 +464,6 @@ DROP TABLE IF EXISTS partman_preserve_privs_temp;
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>Manually Drop Temp Tables</h2>
-                    <ul>
-                        <li>Reported to me that it's very important to manually drop any temp table created in any update script</li>
-                        <li>Possibility that when transaction ends, it may drop the entire extension as part of the drop cascade when temporary objects are automatically cleaned up.</li>
-                        <li>Tested this and unable to replicate, but I've always done this anyway due to my own general paranoia.</li>
-                </section>
-
-                <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Version Checking</h2>
                     <ul>
                         <li>PL/pgSQL</li>
@@ -489,6 +492,47 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                         </li>
                     </ul>
                 </section>
+
+                 <section data-background="css/theme/crunchy_white_bg.png">
+                    <h2>Version Checking (cont)</h2>
+                    <ul>
+                        <div id="li30" style="font-size: 25px";>
+                        <li>Extension Updates</li>
+                        <ul>
+                            <li>Cannot easily handle SQL commands that don't yet exist or were deprecated</li>
+                            <li>Use anonymous blocks + dollar quoted strings
+
+                            <pre><code data-trim>
+DO $pg11only$
+DECLARE
+
+v_partition_data_sql        text;
+
+BEGIN
+
+IF current_setting('server_version_num')::int &gt;= 110000 THEN
+
+    v_partition_data_sql := $partition_data$
+    CREATE PROCEDURE @extschema@.partition_data_proc (p_parent_table text, 
+        [...]
+    END;
+    $$;
+    $partition_data$;
+
+    EXECUTE v_partition_data_sql;
+
+END IF; -- end pg11 version check
+END
+$pg11only$;
+
+
+                            </code></pre>
+                        </ul>
+                   </ul>
+                    </div>
+                </section>
+
+
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Object Name Truncation</h2>
