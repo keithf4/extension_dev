@@ -500,7 +500,8 @@ sprintf(worker.bgw_function_name, "pg_partman_bgw_main");
                         <li>Extension Updates</li>
                         <ul>
                             <li>Cannot easily handle SQL commands that don't yet exist or were deprecated</li>
-                            <li>Use anonymous blocks + dollar quoted strings
+                            <li>Use anonymous blocks + dollar quoted strings</li>
+                            <li>Must provide migration script to add objects later once someone upgrades PG</li>
 
                             <pre><code data-trim>
 DO $pg11only$
