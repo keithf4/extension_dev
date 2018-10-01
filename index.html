@@ -280,8 +280,9 @@ select * from pg_extension_update_paths('mimeo') where source = '0.10.0' and tar
 ALTER EXTENSION dblink UPDATE FROM unpackaged;
                             </pre></code>
                         <li>Do not specify the TO option yet for a specific version. This method is usually done when the "target_version" will correspond to the code state that existed just before it was turned into an extension.</li>
+                        <li>Script file is usually just calls to ALTER EXTENSION ... ADD ... </li>
                         <li>Once the unpackaged version of your code is an extension, you can then run any additional extension updates to get it up to date.</li>
-                        <li>This was done for contrib modules when upgrading from PostgreSQL before 9.1.</li>
+                        <li>This was done for contrib modules when upgrading from PostgreSQL before 9.1 (Ex. <a href="https://github.com/postgres/postgres/tree/master/contrib/dblink" target="_blank">dblink</a>).</li>
                         <li>Highly recommended to convert any contrib modules installed before 9.1 to their extension form after upgrading. Otherwise you may not get updates to those extensions outside of the newly compiled binaries.</li>
                     </ul>
                     </div>
@@ -529,8 +530,8 @@ $pg11only$;
 
                             </code></pre>
                         </ul>
+                        </div>
                    </ul>
-                    </div>
                 </section>
 
 
@@ -540,8 +541,10 @@ $pg11only$;
                     <ul>
                         <li>Object names have a 63 character limit (by default, set at compile time)</li>
                         <li><b><i><a href="https://github.com/keithf4/pg_partman/blob/master/sql/functions/check_name_length.sql" target="_blank">check_name_length()</a></i></b></li>
-                        <li>Automatically truncate given object name to workable length</li>
-                        <li>Allow consistent prefix/suffix entries on object names (partitioning)</li>
+                        <ul>
+                            <li>Automatically truncate given object name to workable length</li>
+                            <li>Allow consistent prefix/suffix entries on object names (partitioning)</li>
+                        </ul>
                     </ul>
                 </section>
 
@@ -549,12 +552,13 @@ $pg11only$;
                     <h2>Avoid Enums</h2>
                     <ul>
                         <li>Not easily editable, especially in extension transaction context</li>
-                        <li>Getting better in 10</li>
+                        <li>Got slightly better in 10</li>
                         <ul>
                             <li>Previously it was impossible to run ALTER TYPE ... ADD VALUE in a transaction block unless the enum type was created in the same block.</li>
                             <li>Allow ENUM values to be renamed</li>
                         </ul>
                         <li>Deletion of value still non-trivial</i>
+                        <li>Use constraints instead</li>
                     </ul>
                 </section>
 
